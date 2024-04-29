@@ -2147,6 +2147,9 @@ class TestCaseExecutor(AbstractTestCaseExecutor):
         # to the logger
         threading.excepthook = log_thread_exception
 
+        # Ours
+        self.test_count = 0
+
     @property
     def module_provider(self) -> ModuleProvider:
         """The module provider used by this executor.
@@ -2223,6 +2226,9 @@ class TestCaseExecutor(AbstractTestCaseExecutor):
                 except Empty as ex:
                     _LOGGER.error("Finished thread did not return a result.")
                     raise RuntimeError("Bug in Pynguin!") from ex
+
+    # _LOGGER.info("Finished test case execution: %s", result)            
+    
         self._after_test_case_execution_outside_thread(test_case, result)
         return result
 
@@ -2239,10 +2245,25 @@ class TestCaseExecutor(AbstractTestCaseExecutor):
         for idx, statement in enumerate(test_case.statements):
             ast_node = self._before_statement_execution(statement, exec_ctx)
             exception = self.execute_ast(ast_node, exec_ctx)
+
+            # _LOGGER.info("AST\n%s\nContext: %s\n", ast.dump(ast_node), exec_ctx.local_namespace)
+            # _LOGGER.info("Exception %s", statement, exception)
+
+            # for name, value in exec_ctx.local_namespace.items():
+            #     _LOGGER.info("Name: %s, Value: %s", name, value)
+            #     if hasattr(value, "__dict__"):
+            #         _LOGGER.info("Dict: %s", value.__dict__)
+
+            self.test_count += 1
+
+            if self.test_count % 100 == 0:
+            _LOGGER.info("%d",self.test_count)
+
             self._after_statement_execution(statement, exec_ctx, exception)
             if exception is not None:
                 result.report_new_thrown_exception(idx, exception)
                 break
+        
         self._after_test_case_execution_inside_thread(test_case, result)
         result_queue.put(result)
 
@@ -2344,6 +2365,8 @@ class TestCaseExecutor(AbstractTestCaseExecutor):
                 "The current thread shall not be executed any more, thus I kill it."
             )
 
+        # _LOGGER.info("Executing test case %s", self._observers)
+
         self._tracer.disable()
         try:
             for observer in reversed(self._observers):
@@ -2410,6 +2433,7 @@ class TypeTracingObserver(ExecutionObserver):
 
     It wraps parameters in proxies in order to make better guesses on their type.
     """
+    _logger = logging.getLogger(__name__)
 
     class TypeTracingLocalState(threading.local):
         """Thread local data for type tracing."""
@@ -2524,5 +2548,8 @@ class TypeTracingObserver(ExecutionObserver):
             # This does not solve all problems, e.g., a list containing proxies, so
             # that's a limitation.
             assert statement.ret_val
+
+            # self._logger.info("After statement execution: %s", statement.ret_val)
+
             value = exec_ctx.get_reference_value(statement.ret_val)
             exec_ctx.replace_variable_value(statement.ret_val, tt.unwrap(value))
