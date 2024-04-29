@@ -1,6 +1,6 @@
 #  This file is part of Pynguin.
 #
-#  SPDX-FileCopyrightText: 2019-2023 Pynguin Contributors
+#  SPDX-FileCopyrightText: 2019–2024 Pynguin Contributors
 #
 #  SPDX-License-Identifier: MIT
 #
@@ -129,7 +129,7 @@ class UsageTraceNode:
 
     def _format_children(self):
         return {
-            child._format_str(): child._format_children()
+            child._format_str(): child._format_children()  # noqa: SLF001
             for child in self.children.values()
         }
 
@@ -146,7 +146,7 @@ class UsageTraceNode:
         Returns:
             The extracted knowledge.
         """
-        return obj._self_usage_trace_node
+        return obj._self_usage_trace_node  # noqa: SLF001
 
     def merge(self, other: UsageTraceNode) -> None:
         """Merge the knowledge from the other proxy into this one.
@@ -190,7 +190,7 @@ class DepthDefaultDict(dict[str, UsageTraceNode]):
         return res
 
 
-def proxify(log_arg_types=False, no_wrap_return=False):
+def proxify(*, log_arg_types=False, no_wrap_return=False):
     """Decorator to wrap the result of a dunder method in a proxy.
 
     Args:
@@ -243,11 +243,11 @@ class _ObjectProxyMethods:
         self.__wrapped__.__module__ = value  # type: ignore[attr-defined]
 
     @property
-    def __doc__(self):  # noqa: A003
+    def __doc__(self):
         return self.__wrapped__.__doc__  # type: ignore[attr-defined]
 
     @__doc__.setter
-    def __doc__(self, value):  # noqa: A003
+    def __doc__(self, value):
         self.__wrapped__.__doc__ = value  # type: ignore[attr-defined]
 
     # We similar use a property for __dict__. We need __dict__ to be
@@ -293,7 +293,7 @@ def unwrap(obj):
     return obj
 
 
-class ObjectProxy(metaclass=_ObjectProxyMetaType):
+class ObjectProxy(metaclass=_ObjectProxyMetaType):  # noqa: PLR0904
     """A proxy for (almost) any Python object.
 
     Native types implemented in C might be problematic.
@@ -302,6 +302,7 @@ class ObjectProxy(metaclass=_ObjectProxyMetaType):
     def __init__(
         self,
         wrapped,
+        *,
         usage_trace: UsageTraceNode | None = None,
         is_kwargs: bool = False,
     ) -> None:
@@ -339,11 +340,11 @@ class ObjectProxy(metaclass=_ObjectProxyMetaType):
             object.__setattr__(self, "__annotations__", wrapped.__annotations__)
 
     @property
-    def __name__(self):  # noqa: A003
+    def __name__(self):  # noqa: PLW3201
         return self.__wrapped__.__name__  # type:ignore[has-type]
 
     @__name__.setter
-    def __name__(self, value):  # noqa: A003
+    def __name__(self, value):  # noqa: PLW3201
         self.__wrapped__.__name__ = value  # type:ignore[has-type]
 
     @property

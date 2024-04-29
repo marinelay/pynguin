@@ -1,9 +1,10 @@
 #  This file is part of Pynguin.
 #
-#  SPDX-FileCopyrightText: 2019–2023 Pynguin Contributors
+#  SPDX-FileCopyrightText: 2019–2024 Pynguin Contributors
 #
 #  SPDX-License-Identifier: MIT
 #
+import contextlib
 import importlib
 import os
 import threading
@@ -37,22 +38,19 @@ from pynguin.utils.orderedset import OrderedSet
 @pytest.fixture()
 def simple_module():
     simple = importlib.import_module("tests.fixtures.instrumentation.simple")
-    simple = importlib.reload(simple)
-    return simple
+    return importlib.reload(simple)
 
 
 @pytest.fixture()
 def artificial_none_module():
     simple = importlib.import_module("tests.fixtures.linecoverage.artificial_none")
-    simple = importlib.reload(simple)
-    return simple
+    return importlib.reload(simple)
 
 
 @pytest.fixture()
 def comparison_module():
     comparison = importlib.import_module("tests.fixtures.instrumentation.comparison")
-    comparison = importlib.reload(comparison)
-    return comparison
+    return importlib.reload(comparison)
 
 
 @pytest.fixture()
@@ -82,7 +80,7 @@ def test_entered_for_loop_no_jump(simple_module, tracer_mock):
     )
     tracer_mock.register_predicate.assert_called_once()
     simple_module.for_loop(3)
-    tracer_mock.executed_bool_predicate.assert_called_with(True, 0)
+    tracer_mock.executed_bool_predicate.assert_called_with(True, 0)  # noqa: FBT003
 
 
 def test_entered_for_loop_no_jump_not_entered(simple_module, tracer_mock):
@@ -93,7 +91,7 @@ def test_entered_for_loop_no_jump_not_entered(simple_module, tracer_mock):
     )
     tracer_mock.register_predicate.assert_called_once()
     simple_module.for_loop(0)
-    tracer_mock.executed_bool_predicate.assert_called_with(False, 0)
+    tracer_mock.executed_bool_predicate.assert_called_with(False, 0)  # noqa: FBT003
 
 
 def test_entered_for_loop_full_loop(simple_module, tracer_mock):
@@ -105,7 +103,12 @@ def test_entered_for_loop_full_loop(simple_module, tracer_mock):
     tracer_mock.register_predicate.assert_called_once()
     simple_module.full_for_loop(3)
     tracer_mock.executed_bool_predicate.assert_has_calls(
-        [call(True, 0), call(True, 0), call(True, 0), call(False, 0)]
+        [
+            call(True, 0),  # noqa: FBT003
+            call(True, 0),  # noqa: FBT003
+            call(True, 0),  # noqa: FBT003
+            call(False, 0),  # noqa: FBT003
+        ]
     )
     assert tracer_mock.executed_bool_predicate.call_count == 4
 
@@ -118,7 +121,7 @@ def test_entered_for_loop_full_loop_not_entered(simple_module, tracer_mock):
     )
     tracer_mock.register_predicate.assert_called_once()
     simple_module.full_for_loop(0)
-    tracer_mock.executed_bool_predicate.assert_called_with(False, 0)
+    tracer_mock.executed_bool_predicate.assert_called_with(False, 0)  # noqa: FBT003
 
 
 def test_add_bool_predicate(simple_module, tracer_mock):
@@ -127,7 +130,7 @@ def test_add_bool_predicate(simple_module, tracer_mock):
     simple_module.bool_predicate.__code__ = transformer.instrument_module(
         simple_module.bool_predicate.__code__
     )
-    simple_module.bool_predicate(True)
+    simple_module.bool_predicate(True)  # noqa: FBT003
     tracer_mock.register_predicate.assert_called_once()
     tracer_mock.executed_bool_predicate.assert_called_once()
 
@@ -151,10 +154,17 @@ def test_transform_for_loop_multi(simple_module, tracer_mock):
     )
     assert simple_module.multi_loop(2) == 4
     assert tracer_mock.register_predicate.call_count == 3
-    calls = [call(True, 0), call(True, 1), call(True, 1), call(False, 1)] * 2 + [
-        call(False, 0),
-        call(False, 2),
+    # fmt: off
+    calls = [
+        call(True, 0),  # noqa: FBT003
+        call(True, 1),  # noqa: FBT003
+        call(True, 1),   # noqa: FBT003
+        call(False, 1),  # noqa: FBT003
+    ] * 2 + [
+        call(False, 0),  # noqa: FBT003
+        call(False, 2),  # noqa: FBT003
     ]
+    # fmt: on
     assert tracer_mock.executed_bool_predicate.call_count == len(calls)
     tracer_mock.executed_bool_predicate.assert_has_calls(calls)
 
@@ -169,7 +179,9 @@ def test_add_cmp_predicate_loop_comprehension(simple_module, tracer_mock):
     simple_module.comprehension(call_count, 3)
     assert tracer_mock.register_predicate.call_count == 2
     assert tracer_mock.executed_compare_predicate.call_count == call_count
-    tracer_mock.executed_bool_predicate.assert_has_calls([call(True, 1)])
+    tracer_mock.executed_bool_predicate.assert_has_calls(
+        [call(True, 1)]  # noqa: FBT003
+    )
 
 
 def test_add_cmp_predicate_lambda(simple_module, tracer_mock):
@@ -240,7 +252,7 @@ def test_avoid_duplicate_instrumentation(simple_module):
     ],
 )
 def test__map_instr_positions(block, expected):
-    assert InstrumentationAdapter._map_instr_positions(block) == expected
+    assert InstrumentationAdapter.map_instr_positions(block) == expected
 
 
 @pytest.mark.parametrize(
@@ -282,7 +294,7 @@ def test_integrate_branch_distance_instrumentation(
 
 def test_integrate_line_coverage_instrumentation(simple_module):
     tracer = ExecutionTracer()
-    function_callable = getattr(simple_module, "multi_loop")
+    function_callable = simple_module.multi_loop
     adapter = LineCoverageInstrumentation(tracer)
     transformer = InstrumentationTransformer(tracer, [adapter])
     function_callable.__code__ = transformer.instrument_module(
@@ -304,9 +316,10 @@ def test_integrate_line_coverage_instrumentation(simple_module):
 
 def test_offset_calculation_checked_coverage_instrumentation(simple_module):
     """Checks if the instructions in the checked coverage are traced correctly.
+
     The disassembled method 'bool_predicate' looks as such:
     21          0 LOAD_FAST                0 (a)
-                2 POP_JUMP_IF_FALSE        4 (to 8)
+                2 POP_JUMP_IF_FALSE        4 (to 8).
 
     22          4 LOAD_CONST               1 (1)
                 6 RETURN_VALUE
@@ -352,20 +365,20 @@ def test_offset_calculation_checked_coverage_instrumentation(simple_module):
 
     tracer = ExecutionTracer()
     tracer.current_thread_identifier = threading.current_thread().ident
-    function_callable = getattr(simple_module, "bool_predicate")
+    function_callable = simple_module.bool_predicate
     adapter = CheckedCoverageInstrumentation(tracer)
     transformer = InstrumentationTransformer(tracer, [adapter])
 
     function_callable.__code__ = transformer.instrument_module(
         function_callable.__code__
     )
-    function_callable(False)
+    function_callable(False)  # noqa: FBT003
 
     trace = tracer.get_trace()
     assert trace.executed_instructions
     assert len(trace.executed_instructions) == len(expected_executed_instructions)
     for expected_instr, actual_instr in zip(
-        expected_executed_instructions, trace.executed_instructions
+        expected_executed_instructions, trace.executed_instructions, strict=False
     ):
         # can not compare expected and actual with equals, since the attribute
         # access instruction holds an argument address that changes with each
@@ -402,7 +415,7 @@ def test_exception():
 
     def func():
         try:
-            raise ValueError()
+            raise ValueError
         except ValueError:
             pass
 
@@ -420,7 +433,7 @@ def test_exception_no_match():
 
     def func():
         try:
-            raise RuntimeError()
+            raise RuntimeError
         except ValueError:
             pass  # pragma: no cover
 
@@ -438,7 +451,7 @@ def test_exception_integrate():
 
     def func():
         try:
-            raise ValueError()
+            raise ValueError
         except ValueError:
             pass
 
@@ -448,9 +461,9 @@ def test_exception_integrate():
     tracer.current_thread_identifier = threading.current_thread().ident
     func()
     assert OrderedSet([0]) == tracer.get_trace().executed_code_objects
-    assert {0: 1} == tracer.get_trace().executed_predicates
-    assert {0: 0.0} == tracer.get_trace().true_distances
-    assert {0: 1.0} == tracer.get_trace().false_distances
+    assert tracer.get_trace().executed_predicates == {0: 1}
+    assert tracer.get_trace().true_distances == {0: 0.0}
+    assert tracer.get_trace().false_distances == {0: 1.0}
 
 
 def test_multiple_instrumentations_share_code_object_ids(simple_module):
@@ -475,7 +488,7 @@ def test_exception_no_match_integrate():
 
     def func():
         try:
-            raise RuntimeError()
+            raise RuntimeError
         except ValueError:
             pass  # pragma: no cover
 
@@ -486,9 +499,29 @@ def test_exception_no_match_integrate():
     with pytest.raises(RuntimeError):
         func()
     assert OrderedSet([0]) == tracer.get_trace().executed_code_objects
-    assert {0: 1} == tracer.get_trace().executed_predicates
-    assert {0: 1.0} == tracer.get_trace().true_distances
-    assert {0: 0.0} == tracer.get_trace().false_distances
+    assert tracer.get_trace().executed_predicates == {0: 1}
+    assert tracer.get_trace().true_distances == {0: 1.0}
+    assert tracer.get_trace().false_distances == {0: 0.0}
+
+
+def test_jump_if_true_or_pop():
+    tracer = ExecutionTracer()
+
+    def func(string, _int_type=int):
+        return (hasattr(string, "is_integer") or hasattr(string, "__array__")) or (
+            isinstance(string, bytes | str)
+        )
+
+    adapter = BranchCoverageInstrumentation(tracer)
+    transformer = InstrumentationTransformer(tracer, [adapter])
+    func.__code__ = transformer.instrument_module(func.__code__)
+    tracer.current_thread_identifier = threading.current_thread().ident
+    with contextlib.nullcontext():
+        func("123")
+    assert OrderedSet([0]) == tracer.get_trace().executed_code_objects
+    assert tracer.get_trace().executed_predicates == {0: 1, 1: 1}
+    assert tracer.get_trace().true_distances == {0: 1.0, 1: 1.0}
+    assert tracer.get_trace().false_distances == {0: 0.0, 1: 0.0}
 
 
 def test_tracking_covered_statements_explicit_return(simple_module):
@@ -652,8 +685,7 @@ def dummy_module():
     dummy_module = importlib.import_module(
         "tests.fixtures.seeding.dynamicseeding.dynamicseedingdummies"
     )
-    dummy_module = importlib.reload(dummy_module)
-    return dummy_module
+    return importlib.reload(dummy_module)
 
 
 def test_compare_op_int(dynamic_instr, dummy_module):
@@ -694,7 +726,7 @@ def test_compare_op_other_type(dynamic_instr, dummy_module):
     dummy_module.compare_op_dummy.__code__ = instr.instrument_module(
         dummy_module.compare_op_dummy.__code__
     )
-    res = dummy_module.compare_op_dummy(True, "def")
+    res = dummy_module.compare_op_dummy(True, "def")  # noqa: FBT003
 
     assert res == 1
     assert not dynamic.has_constant_for(int)
@@ -734,7 +766,7 @@ def test_string_functions(dynamic_instr, func_name, inp, tracked, result):
     # Some evil trickery
     glob = {}
     loc = {}
-    exec(
+    exec(  # noqa: S102
         f"""def dummy(s):
     if s.{func_name}():
         return 0
@@ -759,11 +791,13 @@ def test_string_functions(dynamic_instr, func_name, inp, tracked, result):
         ("endswith", "abc", "bc", "abcbc", 0),
     ],
 )
-def test_binary_string_functions(dynamic_instr, func_name, inp1, inp2, tracked, result):
+def test_binary_string_functions(  # noqa: PLR0917
+    dynamic_instr, func_name, inp1, inp2, tracked, result
+):
     # Some evil trickery
     glob = {}
     loc = {}
-    exec(
+    exec(  # noqa: S102
         f"""def dummy(s1,s2):
     if s1.{func_name}(s2):
         return 0

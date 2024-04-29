@@ -1,6 +1,6 @@
 #  This file is part of Pynguin.
 #
-#  SPDX-FileCopyrightText: 2019-2023 Pynguin Contributors
+#  SPDX-FileCopyrightText: 2019–2024 Pynguin Contributors
 #
 #  SPDX-License-Identifier: MIT
 #
@@ -276,10 +276,10 @@ def is_optional_parameter(inf_sig: InferredSignature, parameter_name: str) -> bo
     parameter: inspect.Parameter = inf_sig.signature.parameters[parameter_name]
     return (
         parameter.kind
-        in (
+        in {
             inspect.Parameter.VAR_POSITIONAL,
             inspect.Parameter.VAR_KEYWORD,
-        )
+        }
         or parameter.default is not inspect.Parameter.empty
     )
 

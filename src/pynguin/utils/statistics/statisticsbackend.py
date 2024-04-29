@@ -1,6 +1,6 @@
 #  This file is part of Pynguin.
 #
-#  SPDX-FileCopyrightText: 2019-2023 Pynguin Contributors
+#  SPDX-FileCopyrightText: 2019–2024 Pynguin Contributors
 #
 #  SPDX-License-Identifier: MIT
 #
@@ -11,7 +11,7 @@ import csv
 import ctypes
 import logging
 
-from abc import ABCMeta
+from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
@@ -32,7 +32,7 @@ class OutputVariable(Generic[T]):
     value: T
 
 
-class AbstractStatisticsBackend(metaclass=ABCMeta):
+class AbstractStatisticsBackend(ABC):
     """An interface for a statistics writer."""
 
     @abstractmethod

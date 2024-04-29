@@ -1,6 +1,6 @@
 #  This file is part of Pynguin.
 #
-#  SPDX-FileCopyrightText: 2019-2023 Pynguin Contributors
+#  SPDX-FileCopyrightText: 2019–2024 Pynguin Contributors
 #
 #  SPDX-License-Identifier: MIT
 #
@@ -82,9 +82,9 @@ class RandomAlgorithm(GenerationAlgorithm):
         Raises:
             GenerationException: In case an error occurs during generation
         """
-        objects_under_test: OrderedSet[
-            gao.GenericAccessibleObject
-        ] = self.test_cluster.accessible_objects_under_test
+        objects_under_test: OrderedSet[gao.GenericAccessibleObject] = (
+            self.test_cluster.accessible_objects_under_test
+        )
 
         if not objects_under_test:
             # In case we do not have any objects under test, we cannot generate a

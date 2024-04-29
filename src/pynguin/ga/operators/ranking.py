@@ -1,6 +1,6 @@
 #  This file is part of Pynguin.
 #
-#  SPDX-FileCopyrightText: 2019-2023 Pynguin Contributors
+#  SPDX-FileCopyrightText: 2019–2024 Pynguin Contributors
 #
 #  SPDX-License-Identifier: MIT
 #
@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 import sys
 
-from abc import ABCMeta
+from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -64,7 +64,7 @@ class RankedFronts(Generic[C]):
         return len(self.fronts)
 
 
-class RankingFunction(Generic[C], metaclass=ABCMeta):
+class RankingFunction(Generic[C], ABC):
     """Interface for ranking algorithms."""
 
     @abstractmethod

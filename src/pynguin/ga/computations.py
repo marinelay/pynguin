@@ -1,6 +1,6 @@
 #  This file is part of Pynguin.
 #
-#  SPDX-FileCopyrightText: 2019-2023 Pynguin Contributors
+#  SPDX-FileCopyrightText: 2019–2024 Pynguin Contributors
 #
 #  SPDX-License-Identifier: MIT
 #
@@ -42,7 +42,7 @@ class ChromosomeComputation(abc.ABC):
     """Executor that will be used by the computation to execute chromosomes."""
 
 
-class TestCaseChromosomeComputation(ChromosomeComputation, metaclass=abc.ABCMeta):
+class TestCaseChromosomeComputation(ChromosomeComputation, abc.ABC):
     """A function that computes something on a test case chromosome."""
 
     def _run_test_case_chromosome(self, individual) -> ExecutionResult:
@@ -66,7 +66,7 @@ class TestCaseChromosomeComputation(ChromosomeComputation, metaclass=abc.ABCMeta
         return result
 
 
-class TestSuiteChromosomeComputation(ChromosomeComputation, metaclass=abc.ABCMeta):
+class TestSuiteChromosomeComputation(ChromosomeComputation, abc.ABC):
     """A function that computes something on a test suite chromosome."""
 
     def _run_test_suite_chromosome(self, individual) -> list[ExecutionResult]:
@@ -137,9 +137,7 @@ class FitnessFunction:
         """
 
 
-class TestCaseFitnessFunction(
-    TestCaseChromosomeComputation, FitnessFunction, metaclass=abc.ABCMeta
-):
+class TestCaseFitnessFunction(TestCaseChromosomeComputation, FitnessFunction, abc.ABC):
     """Base class for test case fitness functions."""
 
     def __init__(self, executor, code_object_id: int):  # noqa: D107
@@ -182,7 +180,7 @@ class BranchDistanceTestCaseFitnessFunction(TestCaseFitnessFunction):
 
 
 class TestSuiteFitnessFunction(
-    TestSuiteChromosomeComputation, FitnessFunction, metaclass=abc.ABCMeta
+    TestSuiteChromosomeComputation, FitnessFunction, abc.ABC
 ):
     """Base class for test suite fitness functions."""
 
@@ -314,13 +312,13 @@ class CoverageFunction:
 
 
 class TestSuiteCoverageFunction(
-    TestSuiteChromosomeComputation, CoverageFunction, metaclass=abc.ABCMeta
+    TestSuiteChromosomeComputation, CoverageFunction, abc.ABC
 ):
     """Base class for all coverage functions that act on test suite level."""
 
 
 class TestCaseCoverageFunction(
-    TestCaseChromosomeComputation, CoverageFunction, metaclass=abc.ABCMeta
+    TestCaseChromosomeComputation, CoverageFunction, abc.ABC
 ):
     """Base class for all coverage functions that act on test case level."""
 
@@ -434,6 +432,7 @@ class ComputationCache:
     def __init__(  # noqa: D107
         self,
         chromosome,
+        *,
         fitness_functions: list[FitnessFunction] | None = None,
         coverage_functions: list[CoverageFunction] | None = None,
         fitness_cache: dict[FitnessFunction, float] | None = None,
@@ -464,11 +463,11 @@ class ComputationCache:
         """
         return ComputationCache(
             new_chromosome,
-            list(self._fitness_functions),
-            list(self._coverage_functions),
-            dict(self._fitness_cache),
-            dict(self._is_covered_cache),
-            dict(self._coverage_cache),
+            fitness_functions=list(self._fitness_functions),
+            coverage_functions=list(self._coverage_functions),
+            fitness_cache=dict(self._fitness_cache),
+            is_covered_cache=dict(self._is_covered_cache),
+            coverage_cache=dict(self._coverage_cache),
         )
 
     def get_fitness_functions(self) -> list[FitnessFunction]:

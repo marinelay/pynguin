@@ -1,6 +1,6 @@
 #  This file is part of Pynguin.
 #
-#  SPDX-FileCopyrightText: 2019-2023 Pynguin Contributors
+#  SPDX-FileCopyrightText: 2019–2024 Pynguin Contributors
 #
 #  SPDX-License-Identifier: MIT
 """Provides the DynaMOSA test-generation strategy."""
@@ -83,9 +83,9 @@ class DynaMOSAAlgorithm(AbstractMOSAAlgorithm):
 
     def evolve(self) -> None:
         """Runs one evolution step."""
-        offspring_population: list[
-            tcc.TestCaseChromosome
-        ] = self._breed_next_generation()
+        offspring_population: list[tcc.TestCaseChromosome] = (
+            self._breed_next_generation()
+        )
 
         # Create union of parents and offspring
         union: list[tcc.TestCaseChromosome] = []
@@ -144,16 +144,16 @@ class _GoalsManager:
         subject_properties: SubjectProperties,
     ) -> None:
         self._archive = archive
-        branch_fitness_functions: OrderedSet[
-            bg.BranchCoverageTestFitness
-        ] = OrderedSet()
+        branch_fitness_functions: OrderedSet[bg.BranchCoverageTestFitness] = (
+            OrderedSet()
+        )
         for fit in fitness_functions:
             assert isinstance(fit, bg.BranchCoverageTestFitness)
             branch_fitness_functions.add(fit)
         self._graph = _BranchFitnessGraph(branch_fitness_functions, subject_properties)
-        self._current_goals: OrderedSet[
-            bg.BranchCoverageTestFitness
-        ] = self._graph.root_branches
+        self._current_goals: OrderedSet[bg.BranchCoverageTestFitness] = (
+            self._graph.root_branches
+        )
         self._archive.add_goals(self._current_goals)  # type: ignore[arg-type]
 
     @property
@@ -245,7 +245,7 @@ class _BranchFitnessGraph:
                 goal = bg.BranchGoal(
                     predicate_meta_data.code_object_id,
                     dependency.predicate_id,
-                    dependency.branch_value,
+                    value=dependency.branch_value,
                 )
                 dependent_ff = self._goal_to_fitness_function(fitness_functions, goal)
                 self._graph.add_edge(dependent_ff, fitness)

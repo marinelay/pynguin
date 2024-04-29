@@ -1,6 +1,6 @@
 #  This file is part of Pynguin.
 #
-#  SPDX-FileCopyrightText: 2019-2023 Pynguin Contributors
+#  SPDX-FileCopyrightText: 2019–2024 Pynguin Contributors
 #
 #  SPDX-License-Identifier: MIT
 #
@@ -117,10 +117,7 @@ def _setup_output_path(output_path: str) -> None:
         path.mkdir(parents=True, exist_ok=True)
 
 
-def _setup_logging(
-    verbosity: int,
-    no_rich: bool,
-) -> Console | None:
+def _setup_logging(verbosity: int, no_rich: bool) -> Console | None:  # noqa: FBT001
     level = logging.WARNING
     if verbosity == 1:
         level = logging.INFO

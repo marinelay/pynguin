@@ -4,7 +4,11 @@
 #
 #  SPDX-License-Identifier: MIT
 #
+from tests.fixtures.cluster import dependency
 
 
-class ListTest:
-    attribute = [1, 2, 3]
+dep = dependency
+
+
+def foo(x: int) -> int:
+    return x * 2

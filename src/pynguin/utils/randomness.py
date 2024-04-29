@@ -1,6 +1,6 @@
 #  This file is part of Pynguin.
 #
-#  SPDX-FileCopyrightText: 2019-2023 Pynguin Contributors
+#  SPDX-FileCopyrightText: 2019–2024 Pynguin Contributors
 #
 #  SPDX-License-Identifier: MIT
 #
@@ -35,7 +35,7 @@ class Random(random.Random):
 
     def seed(self, a=None, version: int = 2) -> None:  # noqa: D102
         if a is None:
-            import time
+            import time  # noqa: PLC0415
 
             a = time.time_ns()
 

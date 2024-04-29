@@ -1,6 +1,6 @@
 #  This file is part of Pynguin.
 #
-#  SPDX-FileCopyrightText: 2019-2023 Pynguin Contributors
+#  SPDX-FileCopyrightText: 2019–2024 Pynguin Contributors
 #
 #  SPDX-License-Identifier: MIT
 #
@@ -250,7 +250,7 @@ class MutationAnalysisAssertionGenerator(AssertionGenerator):
         exec(code, module.__dict__)  # noqa: S102
         return module
 
-    def __init__(self, plain_executor: ex.TestCaseExecutor, testing: bool = False):
+    def __init__(self, plain_executor: ex.TestCaseExecutor, *, testing: bool = False):
         """Initializes the generator.
 
         Args:

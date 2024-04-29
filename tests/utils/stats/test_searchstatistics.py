@@ -1,6 +1,6 @@
 #  This file is part of Pynguin.
 #
-#  SPDX-FileCopyrightText: 2019–2023 Pynguin Contributors
+#  SPDX-FileCopyrightText: 2019–2024 Pynguin Contributors
 #
 #  SPDX-License-Identifier: MIT
 #
@@ -20,26 +20,26 @@ from pynguin.utils.statistics.statisticsbackend import CSVStatisticsBackend
 from pynguin.utils.statistics.statisticsbackend import OutputVariable
 
 
-@pytest.fixture
+@pytest.fixture()
 def search_statistics():
     return stat._SearchStatistics()
 
 
-@pytest.fixture
+@pytest.fixture()
 def chromosome():
     chrom = tsc.TestSuiteChromosome()
     fitness_func = MagicMock(ff.FitnessFunction)
     fitness_func.is_maximisation_function.return_value = False
     chrom.add_fitness_function(fitness_func)
-    chrom._computation_cache._fitness_cache[fitness_func] = 0
+    chrom.computation_cache._fitness_cache[fitness_func] = 0
     coverage_func = MagicMock()
     chrom.add_coverage_function(coverage_func)
-    chrom._computation_cache._coverage_cache[coverage_func] = 0
+    chrom.computation_cache._coverage_cache[coverage_func] = 0
     chrom.changed = False
     return chrom
 
 
-@pytest.fixture
+@pytest.fixture()
 def chromosome_mock():
     return MagicMock(chrom.Chromosome)
 
@@ -88,7 +88,7 @@ def test_write_statistics_with_individual(capsys, chromosome):
     result = statistics.write_statistics()
     captured = capsys.readouterr()
     assert result
-    assert captured.out != ""
+    assert captured.out != ""  # noqa: PLC1901
 
 
 def test_get_output_variables(chromosome, search_statistics):
@@ -112,8 +112,8 @@ def test_get_output_variables(chromosome, search_statistics):
     variables = search_statistics._get_output_variables(chromosome, skip_missing=True)
     assert variables[RuntimeVariable.Coverage.name].value == 0.75
     assert variables[RuntimeVariable.Length.name].value == 0
-    assert variables["ConfigurationId"].value == ""
-    assert variables["ProjectName"].value == ""
+    assert not variables["ConfigurationId"].value
+    assert not variables["ProjectName"].value
 
 
 def test_current_individual_no_backend(chromosome):

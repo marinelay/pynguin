@@ -1,6 +1,6 @@
 #  This file is part of Pynguin.
 #
-#  SPDX-FileCopyrightText: 2019-2023 Pynguin Contributors
+#  SPDX-FileCopyrightText: 2019–2024 Pynguin Contributors
 #
 #  SPDX-License-Identifier: MIT
 #
@@ -212,13 +212,13 @@ class DynamicConstantProvider(DelegatingConstantProvider):
         "isdecimal": lambda value: "non_decimal" if value.isdecimal() else "0123456789",
         "isalpha": lambda value: f"{value}1" if value.isalpha() else "isalpha",
         "isdigit": lambda value: f"{value}_" if value.isdigit() else "0",
-        "isidentifier": lambda value: f"{value}!"
-        if value.isidentifier()
-        else "is_Identifier",
+        "isidentifier": lambda value: (
+            f"{value}!" if value.isidentifier() else "is_Identifier"
+        ),
         "isnumeric": lambda value: f"{value}A" if value.isnumeric() else "012345",
-        "isprintable": lambda value: f"{value}{os.linesep}"
-        if value.isprintable()
-        else "is_printable",
+        "isprintable": lambda value: (
+            f"{value}{os.linesep}" if value.isprintable() else "is_printable"
+        ),
         "isspace": lambda value: f"{value}a" if value.isspace() else "   ",
         "istitle": lambda value: f"{value} AAA" if value.istitle() else "Is Title",
     }
@@ -311,21 +311,21 @@ class _ConstantCollector(ast.NodeVisitor):
         self._pool = ConstantPool()
         self._string_expressions: OrderedSet[str] = OrderedSet()
 
-    def visit_Constant(self, node: ast.Constant):
+    def visit_Constant(self, node: ast.Constant):  # noqa: N802
         if type(node.value) in typing.get_args(ConstantTypes):
             self._pool.add_constant(node.value)
         return self.generic_visit(node)
 
-    def visit_Module(self, node: ast.Module):
+    def visit_Module(self, node: ast.Module):  # noqa: N802
         return self._visit_doc_string(node)
 
-    def visit_FunctionDef(self, node: ast.FunctionDef):
+    def visit_FunctionDef(self, node: ast.FunctionDef):  # noqa: N802
         return self._visit_doc_string(node)
 
-    def visit_ClassDef(self, node: ast.ClassDef):
+    def visit_ClassDef(self, node: ast.ClassDef):  # noqa: N802
         return self._visit_doc_string(node)
 
-    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef):
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef):  # noqa: N802
         return self._visit_doc_string(node)
 
     def _visit_doc_string(

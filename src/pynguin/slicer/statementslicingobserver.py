@@ -1,6 +1,6 @@
 #  This file is part of Pynguin.
 #
-#  SPDX-FileCopyrightText: 2019-2023 Pynguin Contributors
+#  SPDX-FileCopyrightText: 2019–2024 Pynguin Contributors
 #
 #  SPDX-License-Identifier: MIT
 #
@@ -76,12 +76,12 @@ class StatementSlicingObserver(ex.ExecutionObserver):
                 last_traced_instr.code_object_id
             ]
             slicing_instruction = UniqueInstruction(
-                last_traced_instr.file,
-                last_traced_instr.name,
-                last_traced_instr.code_object_id,
-                last_traced_instr.node_id,
-                code_object,
-                last_traced_instr.offset,
+                file=last_traced_instr.file,
+                name=last_traced_instr.name,
+                code_object_id=last_traced_instr.code_object_id,
+                node_id=last_traced_instr.node_id,
+                code_meta=code_object,
+                offset=last_traced_instr.offset,
                 arg=last_traced_instr.argument,
                 lineno=last_traced_instr.lineno,
             )
@@ -89,9 +89,9 @@ class StatementSlicingObserver(ex.ExecutionObserver):
                 slicing_instruction,
                 len(trace.executed_instructions) - self._STORE_INSTRUCTION_OFFSET,
             )
-            self._slicing_local_state.slicing_criteria[
-                statement.get_position()
-            ] = slicing_criterion
+            self._slicing_local_state.slicing_criteria[statement.get_position()] = (
+                slicing_criterion
+            )
 
     def after_test_case_execution_inside_thread(  # noqa: D102
         self, test_case: tc.TestCase, result: ex.ExecutionResult

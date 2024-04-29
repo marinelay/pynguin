@@ -1,6 +1,6 @@
 #  This file is part of Pynguin.
 #
-#  SPDX-FileCopyrightText: 2019-2023 Pynguin Contributors
+#  SPDX-FileCopyrightText: 2019–2024 Pynguin Contributors
 #
 #  SPDX-License-Identifier: MIT
 #
@@ -41,7 +41,7 @@ if TYPE_CHECKING:
 A = TypeVar("A", bound=arch.Archive)
 
 
-class GenerationAlgorithm(Generic[A]):
+class GenerationAlgorithm(Generic[A]):  # noqa: PLR0904
     """Provides an abstract base class for a test generation algorithm."""
 
     def __init__(self) -> None:  # noqa: D107
@@ -54,12 +54,12 @@ class GenerationAlgorithm(Generic[A]):
         self._stopping_conditions: list[StoppingCondition]
         self._crossover_function: CrossOverFunction
         self._ranking_function: RankingFunction
-        self._test_case_fitness_functions: OrderedSet[
-            ff.TestCaseFitnessFunction
-        ] = OrderedSet()
-        self._test_suite_fitness_functions: OrderedSet[
-            ff.TestSuiteFitnessFunction
-        ] = OrderedSet()
+        self._test_case_fitness_functions: OrderedSet[ff.TestCaseFitnessFunction] = (
+            OrderedSet()
+        )
+        self._test_suite_fitness_functions: OrderedSet[ff.TestSuiteFitnessFunction] = (
+            OrderedSet()
+        )
         self._test_suite_coverage_functions: OrderedSet[
             ff.TestSuiteCoverageFunction
         ] = OrderedSet()

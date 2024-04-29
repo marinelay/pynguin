@@ -1,6 +1,6 @@
 #  This file is part of Pynguin.
 #
-#  SPDX-FileCopyrightText: 2019-2023 Pynguin Contributors
+#  SPDX-FileCopyrightText: 2019–2024 Pynguin Contributors
 #
 #  SPDX-License-Identifier: MIT
 #
@@ -70,9 +70,9 @@ class MOSAAlgorithm(AbstractMOSAAlgorithm):
 
     def evolve(self) -> None:
         """Runs one evolution step."""
-        offspring_population: list[
-            tcc.TestCaseChromosome
-        ] = self._breed_next_generation()
+        offspring_population: list[tcc.TestCaseChromosome] = (
+            self._breed_next_generation()
+        )
 
         # Create union of parents and offspring
         union: list[tcc.TestCaseChromosome] = []

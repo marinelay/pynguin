@@ -1,6 +1,6 @@
 #  This file is part of Pynguin.
 #
-#  SPDX-FileCopyrightText: 2019-2023 Pynguin Contributors
+#  SPDX-FileCopyrightText: 2019–2024 Pynguin Contributors
 #
 #  SPDX-License-Identifier: MIT
 #
@@ -14,7 +14,7 @@ from collections.abc import Sized
 from types import ModuleType
 from typing import cast
 
-from _pytest.outcomes import Failed
+from _pytest.outcomes import Failed  # noqa: PLC2701
 
 import pynguin.assertion.assertion as ass
 import pynguin.assertion.assertion_trace as at
@@ -192,6 +192,7 @@ class AssertionTraceObserver(ex.ExecutionObserver):
         ref: vr.Reference,
         position: int,
         trace: at.AssertionTrace,
+        *,
         depth: int = 0,
         max_depth: int = 1,
     ):
@@ -246,7 +247,7 @@ class AssertionTraceObserver(ex.ExecutionObserver):
                             ),
                             position,
                             trace,
-                            depth + 1,
+                            depth=depth + 1,
                         )
 
     @staticmethod

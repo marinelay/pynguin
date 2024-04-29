@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2019–2023 Pynguin Contributors
+SPDX-FileCopyrightText: 2019–2024 Pynguin Contributors
 
 SPDX-License-Identifier: CC-BY-4.0
 -->
@@ -10,6 +10,20 @@ Please also check the [GitHub Releases Page](https://github.com/se2p/pynguin/rel
 for the source-code artifacts of each version.
 
 ## Unreleased
+
+## Pynguin 0.36.0
+
+- Remove unused code
+- Fix `ruff` warnings
+- Add sequence variable for type-evolution tracking
+- Add CLI options to ignore methods and modules from analysis (see #62)
+
+## Pynguin 0.35.0
+
+- Fix `TypeError` bug in instrumentation of bytecode (see GitHub PR #51)
+- Add a dump method for type-information statistics
+- Fix handling of aliased modules (see GitHub issue #57)
+- Fix method-signature handling for C extensions (see GitHub issue #59)
 
 ## Pynguin 0.34.0
 

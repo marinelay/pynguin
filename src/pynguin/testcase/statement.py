@@ -1,6 +1,6 @@
 #  This file is part of Pynguin.
 #
-#  SPDX-FileCopyrightText: 2019-2023 Pynguin Contributors
+#  SPDX-FileCopyrightText: 2019–2024 Pynguin Contributors
 #
 #  SPDX-License-Identifier: MIT
 #
@@ -11,7 +11,6 @@ import abc
 import logging
 import math
 
-from abc import ABCMeta
 from abc import abstractmethod
 from typing import TYPE_CHECKING
 from typing import Any
@@ -44,7 +43,7 @@ if TYPE_CHECKING:
 T = TypeVar("T")
 
 
-class Statement(metaclass=ABCMeta):
+class Statement(abc.ABC):
     """An abstract base class of a statement representation."""
 
     _logger = logging.getLogger(__name__)
@@ -247,7 +246,7 @@ class Statement(metaclass=ABCMeta):
         """
 
 
-class VariableCreatingStatement(Statement, metaclass=abc.ABCMeta):
+class VariableCreatingStatement(Statement, abc.ABC):
     """Abstract superclass for statements that create new variables."""
 
     def __init__(self, test_case: tc.TestCase, ret_val: vr.VariableReference):
@@ -261,7 +260,7 @@ class VariableCreatingStatement(Statement, metaclass=abc.ABCMeta):
         self.ret_val: vr.VariableReference = ret_val
 
 
-class StatementVisitor(metaclass=ABCMeta):
+class StatementVisitor(abc.ABC):
     """An abstract statement visitor."""
 
     @abstractmethod
@@ -500,8 +499,10 @@ class AssignmentStatement(Statement):
     ) -> bool:
         if not isinstance(other, AssignmentStatement):
             return False
-        return self._lhs.structural_eq(other._lhs, memo) and self._rhs.structural_eq(
-            other._rhs, memo
+        return self._lhs.structural_eq(
+            other._lhs, memo  # noqa: SLF001
+        ) and self._rhs.structural_eq(
+            other._rhs, memo  # noqa: SLF001
         )
 
 
@@ -617,7 +618,7 @@ class CollectionStatement(Generic[T], VariableCreatingStatement):
         return alpha_exponent_insertion(self._elements, self._insertion_supplier)
 
 
-class NonDictCollection(CollectionStatement[vr.VariableReference], metaclass=ABCMeta):
+class NonDictCollection(CollectionStatement[vr.VariableReference], abc.ABC):
     """Abstract base class for collections that are not dicts.
 
     We have to handle dicts in a special way, because mutation can affect either
@@ -657,10 +658,12 @@ class NonDictCollection(CollectionStatement[vr.VariableReference], metaclass=ABC
             return False
         return (
             self.ret_val.structural_eq(other.ret_val, memo)
-            and len(self._elements) == len(other._elements)
+            and len(self._elements) == len(other._elements)  # noqa: SLF001
             and all(
                 left.structural_eq(right, memo)
-                for left, right in zip(self._elements, other._elements, strict=True)
+                for left, right in zip(
+                    self._elements, other._elements, strict=True  # noqa: SLF001
+                )
             )
         )
 
@@ -855,11 +858,11 @@ class DictStatement(
             return False
         return (
             self.ret_val.structural_eq(other.ret_val, memo)
-            and len(self._elements) == len(other._elements)
+            and len(self._elements) == len(other._elements)  # noqa: SLF001
             and all(
                 lk.structural_eq(rk, memo) and lv.structural_eq(rv, memo)
                 for (lk, lv), (rk, rv) in zip(
-                    self._elements, other._elements, strict=True
+                    self._elements, other._elements, strict=True  # noqa: SLF001
                 )
             )
         )
@@ -970,9 +973,9 @@ class FieldStatement(VariableCreatingStatement):
         if not isinstance(other, FieldStatement):
             return False
         return (
-            self._field == other._field
+            self._field == other._field  # noqa: SLF001
             and self.ret_val.structural_eq(other.ret_val, memo)
-            and self._source.structural_eq(other._source, memo)
+            and self._source.structural_eq(other._source, memo)  # noqa: SLF001
         )
 
     def structural_hash(  # noqa: D102
@@ -981,7 +984,7 @@ class FieldStatement(VariableCreatingStatement):
         return hash((self._field, self.ret_val.structural_hash(memo)))
 
 
-class ParametrizedStatement(VariableCreatingStatement, metaclass=ABCMeta):
+class ParametrizedStatement(VariableCreatingStatement, abc.ABC):
     """An abstract statement that has parameters.
 
     Superclass for e.g., method or constructor statement.
@@ -1232,10 +1235,11 @@ class ParametrizedStatement(VariableCreatingStatement, metaclass=ABCMeta):
             return False
         return (
             self.ret_val.structural_eq(other.ret_val, memo)
-            and self._generic_callable == other._generic_callable
-            and self._args.keys() == other._args.keys()
+            and self._generic_callable == other._generic_callable  # noqa: SLF001
+            and self._args.keys() == other._args.keys()  # noqa: SLF001
             and all(
-                v.structural_eq(other._args[k], memo) for k, v in self._args.items()
+                v.structural_eq(other._args[k], memo)  # noqa: SLF001
+                for k, v in self._args.items()
             )
         )
 
@@ -1379,7 +1383,7 @@ class MethodStatement(ParametrizedStatement):
         self, other: Any, memo: dict[vr.VariableReference, vr.VariableReference]
     ) -> bool:
         return super().structural_eq(other, memo) and self._callee.structural_eq(
-            other._callee, memo
+            other._callee, memo  # noqa: SLF001
         )
 
     def __repr__(self) -> str:
@@ -1516,7 +1520,7 @@ class PrimitiveStatement(Generic[T], VariableCreatingStatement):
             return False
         return (
             self.ret_val.structural_eq(other.ret_val, memo)
-            and self._value == other._value
+            and self._value == other._value  # noqa: SLF001
         )
 
     def structural_hash(  # noqa: D102
@@ -1928,7 +1932,9 @@ class BytesPrimitiveStatement(PrimitiveStatement[bytes]):
 class BooleanPrimitiveStatement(PrimitiveStatement[bool]):
     """Primitive Statement that creates a boolean."""
 
-    def __init__(self, test_case: tc.TestCase, value: bool | None = None) -> None:
+    def __init__(
+        self, test_case: tc.TestCase, value: bool | None = None  # noqa: FBT001
+    ) -> None:
         """Initializes a primitive statement for a boolean.
 
         Args:
@@ -2031,7 +2037,7 @@ class EnumPrimitiveStatement(PrimitiveStatement[int]):
         return (
             super().structural_eq(other, memo)
             and isinstance(other, EnumPrimitiveStatement)
-            and other._generic_enum == self._generic_enum
+            and other._generic_enum == self._generic_enum  # noqa: SLF001
         )
 
     def structural_hash(  # noqa: D102

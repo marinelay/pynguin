@@ -1,16 +1,19 @@
 #  This file is part of Pynguin.
 #
-#  SPDX-FileCopyrightText: 2019-2023 Pynguin Contributors
+#  SPDX-FileCopyrightText: 2019–2024 Pynguin Contributors
 #
 #  SPDX-License-Identifier: MIT
 #
 """Provides tracking of statistics for various variables and types."""
 from __future__ import annotations
 
+import json
 import logging
+import pprint
 import queue
 import time
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
 
@@ -165,9 +168,9 @@ class _SearchStatistics:
     _logger = logging.getLogger(__name__)
 
     def __init__(self):
-        self._backend: None | (
-            sb.AbstractStatisticsBackend
-        ) = self._initialise_backend()
+        self._backend: None | (sb.AbstractStatisticsBackend) = (
+            self._initialise_backend()
+        )
         self._output_variables: dict[str, sb.OutputVariable] = {}
         self._variable_factories: dict[str, ovf.ChromosomeOutputVariableFactory] = {}
         self._sequence_output_variable_factories: dict[
@@ -192,26 +195,26 @@ class _SearchStatistics:
         return None
 
     def _init_factories(self) -> None:
-        self._variable_factories[
-            RuntimeVariable.Length.name
-        ] = self._ChromosomeLengthOutputVariableFactory()
-        self._variable_factories[
-            RuntimeVariable.Size.name
-        ] = self._ChromosomeSizeOutputVariableFactory()
-        self._variable_factories[
-            RuntimeVariable.Coverage.name
-        ] = self._ChromosomeCoverageOutputVariableFactory()
-        self._variable_factories[
-            RuntimeVariable.Fitness.name
-        ] = self._ChromosomeFitnessOutputVariableFactory()
+        self._variable_factories[RuntimeVariable.Length.name] = (
+            self._ChromosomeLengthOutputVariableFactory()
+        )
+        self._variable_factories[RuntimeVariable.Size.name] = (
+            self._ChromosomeSizeOutputVariableFactory()
+        )
+        self._variable_factories[RuntimeVariable.Coverage.name] = (
+            self._ChromosomeCoverageOutputVariableFactory()
+        )
+        self._variable_factories[RuntimeVariable.Fitness.name] = (
+            self._ChromosomeFitnessOutputVariableFactory()
+        )
 
     def _fill_sequence_output_variable_factories(self) -> None:
         self._sequence_output_variable_factories[
             RuntimeVariable.CoverageTimeline.name
         ] = self._CoverageSequenceOutputVariableFactory()
-        self._sequence_output_variable_factories[
-            RuntimeVariable.SizeTimeline.name
-        ] = self._SizeSequenceOutputVariableFactory()
+        self._sequence_output_variable_factories[RuntimeVariable.SizeTimeline.name] = (
+            self._SizeSequenceOutputVariableFactory()
+        )
         self._sequence_output_variable_factories[
             RuntimeVariable.LengthTimeline.name
         ] = self._LengthSequenceOutputVariableFactory()
@@ -222,6 +225,11 @@ class _SearchStatistics:
             RuntimeVariable.TotalExceptionsTimeline.name
         ] = ovf.DirectSequenceOutputVariableFactory.get_integer(
             RuntimeVariable.TotalExceptionsTimeline
+        )
+        self._sequence_output_variable_factories[
+            RuntimeVariable.SignatureInfosTimeline.name
+        ] = ovf.TypeEvolutionSequenceOutputVariableFactory(
+            RuntimeVariable.SignatureInfosTimeline, "{}"
         )
 
     def set_sequence_output_variable_start_time(self, start_time: int) -> None:
@@ -312,7 +320,7 @@ class _SearchStatistics:
         return self._output_variables
 
     def _get_output_variables(
-        self, individual, skip_missing: bool = True
+        self, individual, *, skip_missing: bool = True
     ) -> dict[str, sb.OutputVariable]:
         output_variables_map: dict[str, sb.OutputVariable] = {}
 
@@ -380,6 +388,21 @@ class _SearchStatistics:
         individual = self._best_individual
         output_variables_map = self._get_output_variables(individual)
         self._backend.write_data(output_variables_map)
+
+        if (
+            config.configuration.statistics_output.statistics_backend
+            == config.StatisticsBackend.CSV
+        ):
+            report_dir = Path(
+                config.configuration.statistics_output.report_dir
+            ).resolve()
+            if "SignatureInfos" in output_variables_map:
+                obj = json.loads(output_variables_map["SignatureInfos"].value)
+                output_file = report_dir / "signature-infos.json"
+                with output_file.open(mode="w") as f:
+                    json.dump(obj, f)
+            cfg_file = report_dir / "pynguin-config.txt"
+            cfg_file.write_text(pprint.pformat(repr(config.configuration)))
         return True
 
     class _ChromosomeLengthOutputVariableFactory(ovf.ChromosomeOutputVariableFactory):

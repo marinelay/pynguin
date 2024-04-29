@@ -1,6 +1,6 @@
 #  This file is part of Pynguin.
 #
-#  SPDX-FileCopyrightText: 2019–2023 Pynguin Contributors
+#  SPDX-FileCopyrightText: 2019–2024 Pynguin Contributors
 #
 #  SPDX-License-Identifier: MIT
 import importlib
@@ -17,7 +17,7 @@ from pynguin.instrumentation.instrumentation import InstrumentationTransformer
 from pynguin.testcase.execution import ExecutionTracer
 
 
-@pytest.fixture
+@pytest.fixture()
 def subject_properties():
     nested_module = importlib.import_module("tests.fixtures.examples.nested")
 
@@ -28,10 +28,10 @@ def subject_properties():
     return tracer.get_subject_properties()
 
 
-@pytest.fixture
+@pytest.fixture()
 def subject_properties_nested():
-    def testMe(y):  # pragma: no cover
-        def inner(x):
+    def testMe(_):  # pragma: no cover  # noqa: N802
+        def inner(_):
             pass
 
     tracer = ExecutionTracer()
@@ -46,8 +46,8 @@ def test_fitness_graph_root_branches(subject_properties):
     ffs = bg.create_branch_coverage_fitness_functions(MagicMock(), pool)
     ffgraph = dyna._BranchFitnessGraph(ffs, subject_properties)
     assert {br.goal for br in ffgraph.root_branches} == {
-        bg.BranchGoal(0, 3, False),
-        bg.BranchGoal(0, 3, True),
+        bg.BranchGoal(code_object_id=0, predicate_id=3, value=False),
+        bg.BranchGoal(code_object_id=0, predicate_id=3, value=True),
     }
 
 
@@ -55,10 +55,14 @@ def test_fitness_graph_structural_children(subject_properties):
     pool = bg.BranchGoalPool(subject_properties)
     ffs = bg.create_branch_coverage_fitness_functions(MagicMock(), pool)
     ffgraph = dyna._BranchFitnessGraph(ffs, subject_properties)
-    target = [ff for ff in ffs if ff.goal == bg.BranchGoal(0, 2, True)][0]
+    target = next(
+        ff
+        for ff in ffs
+        if ff.goal == bg.BranchGoal(code_object_id=0, predicate_id=2, value=True)
+    )
     assert {ff.goal for ff in ffgraph.get_structural_children(target)} == {
-        bg.BranchGoal(0, 0, False),
-        bg.BranchGoal(0, 0, True),
+        bg.BranchGoal(code_object_id=0, predicate_id=0, value=False),
+        bg.BranchGoal(code_object_id=0, predicate_id=0, value=True),
     }
 
 
@@ -66,7 +70,11 @@ def test_fitness_graph_no_structural_children(subject_properties):
     pool = bg.BranchGoalPool(subject_properties)
     ffs = bg.create_branch_coverage_fitness_functions(MagicMock(), pool)
     ffgraph = dyna._BranchFitnessGraph(ffs, subject_properties)
-    target = [ff for ff in ffs if ff.goal == bg.BranchGoal(0, 3, False)][0]
+    target = next(
+        ff
+        for ff in ffs
+        if ff.goal == bg.BranchGoal(code_object_id=0, predicate_id=3, value=False)
+    )
     assert {ff.goal for ff in ffgraph.get_structural_children(target)} == set()
 
 

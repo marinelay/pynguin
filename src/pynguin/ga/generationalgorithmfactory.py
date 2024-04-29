@@ -1,6 +1,6 @@
 #  This file is part of Pynguin.
 #
-#  SPDX-FileCopyrightText: 2019-2023 Pynguin Contributors
+#  SPDX-FileCopyrightText: 2019–2024 Pynguin Contributors
 #
 #  SPDX-License-Identifier: MIT
 
@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import logging
 
-from abc import ABCMeta
+from abc import ABC
 from abc import abstractmethod
 from typing import TYPE_CHECKING
 from typing import Generic
@@ -77,7 +77,7 @@ if TYPE_CHECKING:
 C = TypeVar("C", bound=chrom.Chromosome)
 
 
-class GenerationAlgorithmFactory(Generic[C], metaclass=ABCMeta):
+class GenerationAlgorithmFactory(Generic[C], ABC):
     """A generic generation algorithm factory."""
 
     _logger = logging.getLogger(__name__)
@@ -223,12 +223,12 @@ class TestSuiteGenerationAlgorithmFactory(
             test_case_chromosome_factory = tccf.ArchiveReuseTestCaseChromosomeFactory(
                 test_case_chromosome_factory, strategy.archive
             )
-        if config.configuration.algorithm in (
+        if config.configuration.algorithm in {
             config.Algorithm.DYNAMOSA,
             config.Algorithm.MIO,
             config.Algorithm.MOSA,
             config.Algorithm.RANDOM_TEST_CASE_SEARCH,
-        ):
+        }:
             return test_case_chromosome_factory
         return tscf.TestSuiteChromosomeFactory(
             test_case_chromosome_factory,
@@ -365,13 +365,13 @@ class TestSuiteGenerationAlgorithmFactory(
         Returns:
             A list of fitness functions
         """
-        if config.configuration.algorithm in (
+        if config.configuration.algorithm in {
             config.Algorithm.DYNAMOSA,
             config.Algorithm.MIO,
             config.Algorithm.MOSA,
             config.Algorithm.RANDOM_TEST_CASE_SEARCH,
             config.Algorithm.WHOLE_SUITE,
-        ):
+        }:
             fitness_functions: OrderedSet[ff.TestCaseFitnessFunction] = OrderedSet()
             coverage_metrics = config.configuration.statistics_output.coverage_metrics
             if config.CoverageMetric.LINE in coverage_metrics:

@@ -1,6 +1,6 @@
 #  This file is part of Pynguin.
 #
-#  SPDX-FileCopyrightText: 2019-2023 Pynguin Contributors
+#  SPDX-FileCopyrightText: 2019–2024 Pynguin Contributors
 #
 #  SPDX-License-Identifier: MIT
 
@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import time
 
-from abc import ABCMeta
+from abc import ABC
 from abc import abstractmethod
 from typing import TYPE_CHECKING
 
@@ -35,10 +35,10 @@ if TYPE_CHECKING:
     from pynguin.testcase.execution import TestCaseExecutor
 
 
-class StoppingCondition(so.SearchObserver, ExecutionObserver, metaclass=ABCMeta):
+class StoppingCondition(so.SearchObserver, ExecutionObserver, ABC):
     """Provides an interface for a stopping condition of an algorithm."""
 
-    def __init__(self, observes_execution: bool = False):  # noqa: D107
+    def __init__(self, *, observes_execution: bool = False):  # noqa: D107
         self._observes_execution = observes_execution
 
     @abstractmethod

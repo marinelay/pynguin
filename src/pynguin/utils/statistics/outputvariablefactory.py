@@ -1,6 +1,6 @@
 #  This file is part of Pynguin.
 #
-#  SPDX-FileCopyrightText: 2019-2023 Pynguin Contributors
+#  SPDX-FileCopyrightText: 2019–2024 Pynguin Contributors
 #
 #  SPDX-License-Identifier: MIT
 #
@@ -10,7 +10,7 @@ from __future__ import annotations
 import time
 import typing
 
-from abc import ABCMeta
+from abc import ABC
 from abc import abstractmethod
 from typing import Generic
 from typing import TypeVar
@@ -26,10 +26,10 @@ if typing.TYPE_CHECKING:
 
     from pynguin.utils.statistics.runtimevariable import RuntimeVariable
 
-T = TypeVar("T", int, float)
+T = TypeVar("T", int, float, str)
 
 
-class ChromosomeOutputVariableFactory(Generic[T], metaclass=ABCMeta):
+class ChromosomeOutputVariableFactory(Generic[T], ABC):
     """Factory to create an output variable when given a test suite chromosome."""
 
     def __init__(self, variable: RuntimeVariable) -> None:
@@ -65,7 +65,7 @@ class ChromosomeOutputVariableFactory(Generic[T], metaclass=ABCMeta):
         )
 
 
-class SequenceOutputVariableFactory(Generic[T], metaclass=ABCMeta):
+class SequenceOutputVariableFactory(Generic[T], ABC):
     """Creates an output variable that represents a sequence of values."""
 
     def __init__(self, variable: stat.RuntimeVariable) -> None:  # noqa: D107
@@ -103,12 +103,10 @@ class SequenceOutputVariableFactory(Generic[T], metaclass=ABCMeta):
         self._values.append(self.get_value(individual))
 
     @overload
-    def update_value(self, value: int) -> None:
-        ...
+    def update_value(self, value: int) -> None: ...
 
     @overload
-    def update_value(self, value: float) -> None:
-        ...
+    def update_value(self, value: float) -> None: ...
 
     def update_value(self, value) -> None:
         """Updates the value directly.
@@ -146,7 +144,7 @@ class SequenceOutputVariableFactory(Generic[T], metaclass=ABCMeta):
     def _get_time_line_value(self, index: int) -> T:
         if not self._time_stamps:
             # No data, if this is even possible.
-            return 0
+            return 0  # type: ignore[return-value]
         interval = config.configuration.statistics_output.timeline_interval
         preferred_time = interval * index
 
@@ -233,3 +231,39 @@ class DirectSequenceOutputVariableFactory(SequenceOutputVariableFactory, Generic
             A factory for that variable
         """
         return DirectSequenceOutputVariableFactory(variable, 0)
+
+
+class TypeEvolutionSequenceOutputVariableFactory(
+    DirectSequenceOutputVariableFactory, Generic[T]
+):
+    """A sequence output variable for type-information evolution."""
+
+    def __init__(self, variable: RuntimeVariable, start_value: T) -> None:  # noqa: D107
+        super().__init__(variable, start_value)
+
+    def get_value(self, individual: chrom.Chromosome) -> T:  # noqa: D102
+        return self._values[-1]
+
+    def update(self, individual: chrom.Chromosome) -> None:  # noqa: D102
+        pass  # do nothing on purpose for this variable, use `update_value` instead
+
+    def _get_time_line_value(self, index: int) -> T:
+        if not self._time_stamps:
+            # No data, if this is even possible.
+            raise ValueError("Cannot get timeline if no time stamps exist.")
+        interval = config.configuration.statistics_output.timeline_interval
+        preferred_time = interval * index
+
+        for i in range(len(self._time_stamps)):
+            # find the first stamp that is following the time we would like to get the
+            # value for
+            stamp = self._time_stamps[i]
+            if stamp < preferred_time:
+                continue
+            if i == 0:
+                # it is the first element, just use it as value
+                return self._values[i]
+            # we cannot interpolate, thus return the last observed value
+            return self._values[i - 1]
+        # no time stamp was higher, just use the last value seen
+        return self._values[-1]

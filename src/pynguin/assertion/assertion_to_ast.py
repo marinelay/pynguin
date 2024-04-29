@@ -1,6 +1,6 @@
 #  This file is part of Pynguin.
 #
-#  SPDX-FileCopyrightText: 2019-2023 Pynguin Contributors
+#  SPDX-FileCopyrightText: 2019–2024 Pynguin Contributors
 #
 #  SPDX-License-Identifier: MIT
 #
@@ -261,7 +261,10 @@ class PyTestAssertionToAstVisitor(ass.AssertionVisitor):
             au.create_ast_name("len"),
             [
                 au.create_full_name(
-                    self._variable_names, self._module_aliases, assertion.source, True
+                    self._variable_names,
+                    self._module_aliases,
+                    assertion.source,
+                    load=True,
                 )
             ],
             [],
