@@ -258,6 +258,7 @@ class GenerationAlgorithm(Generic[A]):  # noqa: PLR0904
         Returns:
             A test-suite chromosome
         """
+
         suite = tsc.TestSuiteChromosome()
         suite.add_test_case_chromosomes(list(population))
         for suite_fitness in self._test_suite_fitness_functions:

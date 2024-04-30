@@ -814,6 +814,14 @@ class ModuleTestCluster(TestCluster):  # noqa: PLR0904
         if len(accessible_objects) == 0:
             raise ConstructionFailedException(f"No modifiers for {typ}")
         return randomness.choice(accessible_objects)
+    
+    def get_type_change_call_for(
+        self, typ: ProperType
+    ):
+        accessible_objects = self.get_modifiers_for(typ)
+        if len(accessible_objects) == 0:
+            raise ConstructionFailedException(f"No modifiers for {typ}")
+        return randomness.choice(accessible_objects)
 
     @functools.lru_cache(maxsize=128)
     def get_all_generatable_types(self) -> list[ProperType]:  # noqa: D102

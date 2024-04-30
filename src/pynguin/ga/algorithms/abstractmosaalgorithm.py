@@ -33,6 +33,7 @@ class AbstractMOSAAlgorithm(GenerationAlgorithm[CoverageArchive], ABC):
         self._number_of_goals = -1
 
     def _breed_next_generation(self) -> list[tcc.TestCaseChromosome]:
+        changed_info = self._executor.class_change_info_dict
         offspring_population: list[tcc.TestCaseChromosome] = []
         for _ in range(int(config.configuration.search_algorithm.population / 2)):
             parent_1 = self._selection_function.select(self._population)[0]
@@ -52,12 +53,12 @@ class AbstractMOSAAlgorithm(GenerationAlgorithm[CoverageArchive], ABC):
                     continue
 
             # Apply mutation on offspring_1
-            self._mutate(offspring_1)
+            self._mutate(offspring_1, changed_info)
             if offspring_1.changed and offspring_1.size() > 0:
                 offspring_population.append(offspring_1)
 
             # Apply mutation on offspring_2
-            self._mutate(offspring_2)
+            self._mutate(offspring_2, changed_info)
             if offspring_2.changed and offspring_2.size() > 0:
                 offspring_population.append(offspring_2)
 
@@ -72,7 +73,7 @@ class AbstractMOSAAlgorithm(GenerationAlgorithm[CoverageArchive], ABC):
                 tch: tcc.TestCaseChromosome = self._chromosome_factory.get_chromosome()
             else:
                 tch = randomness.choice(self._archive.solutions).clone()
-                tch.mutate()
+                tch.mutate(changed_info)
 
             if tch.changed and tch.size() > 0:
                 offspring_population.append(tch)
@@ -81,11 +82,11 @@ class AbstractMOSAAlgorithm(GenerationAlgorithm[CoverageArchive], ABC):
         return offspring_population
 
     @staticmethod
-    def _mutate(offspring: tcc.TestCaseChromosome) -> None:
-        offspring.mutate()
+    def _mutate(offspring: tcc.TestCaseChromosome, changed_info: dict) -> None:
+        offspring.mutate(changed_info)
         if not offspring.changed:
             # if offspring is not changed, we try to mutate it once again
-            offspring.mutate()
+            offspring.mutate(changed_info)
 
     def _get_non_dominated_solutions(
         self, solutions: list[tcc.TestCaseChromosome]

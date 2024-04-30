@@ -72,6 +72,8 @@ from pynguin.utils.type_utils import is_bytes
 from pynguin.utils.type_utils import is_numeric
 from pynguin.utils.type_utils import is_string
 
+import pynguin.testcase.class_info as ci
+
 
 immutable_types = (int, float, complex, str, tuple, frozenset, bytes)
 
@@ -2174,6 +2176,7 @@ class TestCaseExecutor(AbstractTestCaseExecutor):
 
         # Ours
         self.test_count = 0
+        self.class_change_info_dict = {}
 
     @property
     def module_provider(self) -> ModuleProvider:
@@ -2268,28 +2271,76 @@ class TestCaseExecutor(AbstractTestCaseExecutor):
         result = ExecutionResult()
         exec_ctx = ExecutionContext(self._module_provider)
         self._tracer.current_thread_identifier = threading.current_thread().ident
+
+        var_to_classes_info = {}
+
         for idx, statement in enumerate(test_case.statements):
             ast_node = self._before_statement_execution(statement, exec_ctx)
             exception = self.execute_ast(ast_node, exec_ctx)
 
-            # _LOGGER.info("AST\n%s\nContext: %s\n", ast.dump(ast_node), exec_ctx.local_namespace)
             # _LOGGER.info("Exception %s", statement, exception)
+            
 
-            # for name, value in exec_ctx.local_namespace.items():
-            #     _LOGGER.info("Name: %s, Value: %s", name, value)
-            #     if hasattr(value, "__dict__"):
-            #         _LOGGER.info("Dict: %s", value.__dict__)
+            for name, value in exec_ctx.local_namespace.items():
+                method_name = None
+                stmt_ast = exec_ctx.node_for_statement(statement)
+                # _LOGGER.info("%s", stmt_ast)
 
-            self.test_count += 1
+                if isinstance(stmt_ast, ast.Assign):
+                    # targets = stmt_ast.targets
+                    # targets = list(map(lambda x: 
+                    #     ast.unparse(x), 
+                    #     targets
+                    # ))
+                    assign_value = stmt_ast.value
 
-            if self.test_count % 100 == 0:
-            _LOGGER.info("%d",self.test_count)
+                    if isinstance(assign_value, ast.Call):
+                        # _LOGGER.info("%s", stmt_ast)
+                        func = assign_value.func
+                        if isinstance(func, ast.Attribute):
+                            method_name = func.attr
+                        elif isinstance(func, ast.Name):
+                            method_name = func.id
+
+                
+
+                    if method_name and hasattr(value, "__dict__"):
+                        cur_class_info = ci.ClassInfo()
+                        for key, val in value.__dict__.items():
+                            cur_class_info.add_fields(key, type(val).__name__)
+                            # _LOGGER.info("%s %s", key, val)
+
+                        class_name = f'{value.__class__.__module__}.{value.__class__.__qualname__}'
+
+                        classes_info = var_to_classes_info.get(name, ci.ClassesInfo())
+
+                        classes_info.add_class_info(class_name, method_name, cur_class_info)
+
+                        var_to_classes_info[name] = classes_info
+
+                        # _LOGGER.info("OK")
+
+        
 
             self._after_statement_execution(statement, exec_ctx, exception)
             if exception is not None:
                 result.report_new_thrown_exception(idx, exception)
                 break
         
+        for classes_info in var_to_classes_info.values():
+            for name, (_, class_change_info) in classes_info.classes.items():
+                prev_class_change_info = self.class_change_info_dict.get(name, ci.ClassChangeInfo())
+                prev_class_change_info.merge(class_change_info)
+                self.class_change_info_dict[name] = prev_class_change_info
+
+        # self.test_count += 1
+
+        # if self.test_count % 100 == 0:
+        #     for name, class_change_info in self.class_change_info_dict.items():
+        #         _LOGGER.info("Variable: %s => \n%s", name, str(class_change_info))
+
+        
+
         self._after_test_case_execution_inside_thread(test_case, result)
         result_queue.put(result)
 

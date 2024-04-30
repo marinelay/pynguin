@@ -560,11 +560,25 @@ class TestFactory:
                 < config.configuration.test_creation.use_random_object_for_call
                 else variable.type
             )
-            accessible = self._test_cluster.get_random_call_for(typ)
+
+            # TODO : No random => use the type of the variable
+            # self._logger.info("Add Call on Object (%s)", typ)
+
+            # accessible = self._test_cluster.get_random_call_for(typ)
+            accessible = self.choice_call(test_case, variable, position, typ)
             return self.add_call_for(test_case, variable, accessible, position)
         except ConstructionFailedException:
             pass
         return False
+    
+    def choice_call(
+        self, test_case: tc.TestCase, variable: vr.VariableReference, position: int, typ: ProperType
+    ):
+        # TODO: Selecte based on the codebase
+        if position < 0:
+            return self._test_cluster.get_random_call_for(typ)
+        else:
+            return self._test_cluster.get_type_change_call_for(typ)
 
     def add_call_for(
         self,
@@ -591,6 +605,7 @@ class TestFactory:
         try:
             if accessible.is_method():
                 method = cast(gao.GenericMethod, accessible)
+                # self._logger.info("Add Method %s", method)
                 self.add_method(test_case, method, position=position, callee=callee)
                 return True
             if accessible.is_field():
@@ -641,6 +656,9 @@ class TestFactory:
             Whether the insertion was successful
         """
         previous_length = test_case.size()
+
+        # TODO: No random
+
         accessible = self._test_cluster.get_random_accessible()
         if accessible is None:
             return False
@@ -755,7 +773,7 @@ class TestFactory:
         return positions
 
     def change_random_call(
-        self, test_case: tc.TestCase, statement: stmt.VariableCreatingStatement
+        self, test_case: tc.TestCase, statement: stmt.VariableCreatingStatement, changed_info: dict, used_call: dict, before_call
     ) -> bool:
         """Change the call represented by this statement to another one.
 
@@ -771,6 +789,9 @@ class TestFactory:
         # We need a consistent signature, otherwise nothing will match up
         signature_memo: dict[InferredSignature, dict[str, ProperType]] = {}
         calls = self._get_possible_calls(type_, objects, signature_memo)
+
+        
+
         acc_object = statement.accessible_object()
         if acc_object in calls:
             calls.remove(acc_object)
@@ -778,7 +799,42 @@ class TestFactory:
         if len(calls) == 0:
             return False
 
+        # TODO: No random
+        # for k, v in changed_info.items():
+        #     self._logger.info(f"Change Call: {k} -> \n{v}")
+        weights = []
+
+        for call in calls:
+            weight = 1
+            call_module = call._owner.full_name
+            call_func = call._callable.__name__
+
+            
+
+            call_changed_info = changed_info.get(call_module, None)
+
+            # add weight for type change call
+            if call_changed_info:
+                var_type_info = call_changed_info.get(call_func, None)
+                if var_type_info:
+                    weight += sum(map(lambda x: len(x), var_type_info.values()))
+
+            used_call_info = used_call.get(call_module, None)
+
+            # if before_call:
+            #     before_module, before_func = before_call
+            #     if call_module == before_module and call_func == before_func:
+            #         weight /= 2
+
+            if used_call_info:
+                num_used_call = used_call_info.get(call_func, 0) + 1
+                if num_used_call > 1:
+                    weight /= 2
+
+            weights.append(weight)
+
         call = randomness.choice(calls)
+        # call = randomness.choices(calls, weights=weights)[0]
         try:
             self.change_call(test_case, statement, call, signature_memo)
             return True

@@ -44,6 +44,11 @@ class DynaMOSAAlgorithm(AbstractMOSAAlgorithm):
         self._goals_manager: _GoalsManager
 
     def generate_tests(self) -> tsc.TestSuiteChromosome:  # noqa: D102
+
+        changed_info = self._executor.class_change_info_dict
+
+        
+
         self.before_search_start()
         self._goals_manager = _GoalsManager(
             self._test_case_fitness_functions,  # type: ignore[arg-type]
@@ -147,13 +152,17 @@ class _GoalsManager:
         branch_fitness_functions: OrderedSet[bg.BranchCoverageTestFitness] = (
             OrderedSet()
         )
+
         for fit in fitness_functions:
-            assert isinstance(fit, bg.BranchCoverageTestFitness)
+            assert isinstance(fit, (bg.BranchCoverageTestFitness, bg.OurCoverageTestFitness))
             branch_fitness_functions.add(fit)
         self._graph = _BranchFitnessGraph(branch_fitness_functions, subject_properties)
         self._current_goals: OrderedSet[bg.BranchCoverageTestFitness] = (
             self._graph.root_branches
         )
+
+        # self._logger.info("Initial goals: %s", self._current_goals)
+
         self._archive.add_goals(self._current_goals)  # type: ignore[arg-type]
 
     @property

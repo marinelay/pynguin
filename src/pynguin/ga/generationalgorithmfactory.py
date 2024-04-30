@@ -374,17 +374,26 @@ class TestSuiteGenerationAlgorithmFactory(
         }:
             fitness_functions: OrderedSet[ff.TestCaseFitnessFunction] = OrderedSet()
             coverage_metrics = config.configuration.statistics_output.coverage_metrics
+            self._logger.info("%s", coverage_metrics)
             if config.CoverageMetric.LINE in coverage_metrics:
                 fitness_functions.update(
                     bg.create_line_coverage_fitness_functions(self._executor)
                 )
 
             if config.CoverageMetric.BRANCH in coverage_metrics:
+                # fitness_functions.update(
+                #     bg.create_our_coverage_fitness_functions(self._executor, strategy.branch_goal_pool)
+                # )
+
+                # self._logger.info("%s", repr(fitness_functions))
+
                 fitness_functions.update(
                     bg.create_branch_coverage_fitness_functions(
                         self._executor, strategy.branch_goal_pool
                     )
                 )
+
+                # self._logger.info("%s", repr(fitness_functions))
 
             if config.CoverageMetric.CHECKED in coverage_metrics:
                 fitness_functions.update(

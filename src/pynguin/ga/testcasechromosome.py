@@ -9,12 +9,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import logging
+
 import pynguin.configuration as config
 import pynguin.ga.chromosome as chrom
 import pynguin.testcase.statement as stmt
 
 from pynguin.utils import randomness
 
+_LOGGER = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     import pynguin.ga.chromosomevisitor as cv
@@ -105,7 +108,8 @@ class TestCaseChromosome(chrom.Chromosome):
             self._test_case = offspring_test_case
             self.changed = True
 
-    def mutate(self) -> None:  # noqa: D102
+    def mutate(self, changed_info) -> None:  # noqa: D102
+
         changed = False
 
         if (
@@ -130,7 +134,7 @@ class TestCaseChromosome(chrom.Chromosome):
         if (
             randomness.next_float()
             <= config.configuration.search_algorithm.test_change_probability
-            and self._mutation_change()
+            and self._mutation_change(changed_info)
         ):
             changed = True
 
@@ -168,7 +172,7 @@ class TestCaseChromosome(chrom.Chromosome):
         assert self._test_factory, "Mutation requires a test factory."
         return self._test_factory.delete_statement_gracefully(self._test_case, idx)
 
-    def _mutation_change(self) -> bool:
+    def _mutation_change(self, changed_info) -> bool:
         last_mutatable_statement = self.get_last_mutatable_statement()
         if last_mutatable_statement is None:
             return False
@@ -176,11 +180,17 @@ class TestCaseChromosome(chrom.Chromosome):
         changed = False
         p_per_statement = 1.0 / (last_mutatable_statement + 1.0)
         position = 0
+
+        used_call = dict()
+        before_call = None
+
         while position <= last_mutatable_statement:
             if randomness.next_float() < p_per_statement:
                 statement = self._test_case.get_statement(position)
+
                 if not isinstance(statement, stmt.VariableCreatingStatement):
                     continue
+
                 old_distance = statement.ret_val.distance
                 ret_val = statement.ret_val
                 if statement.mutate():
@@ -190,10 +200,35 @@ class TestCaseChromosome(chrom.Chromosome):
                     if self._test_factory.change_random_call(
                         self._test_case,
                         statement,
+                        changed_info,
+                        used_call,
+                        before_call
                     ):
                         changed = True
+
+                before_position_statement = self._test_case.get_statement(position)
+                
                 statement.ret_val.distance = old_distance
                 position = ret_val.get_statement_position()
+
+                new_statement = self._test_case.get_statement(position)
+
+                assert before_position_statement == new_statement
+
+            new_statement = self._test_case.get_statement(position)
+
+            if isinstance(new_statement, stmt.ParametrizedStatement):
+                # _LOGGER.info(new_statement)
+                module_name = new_statement._generic_callable._owner.full_name
+                method_name = new_statement._generic_callable._callable.__name__
+                # _LOGGER.info(f"Module: {module_name}, Method: {method_name}")
+                prev_used_call = used_call.get(module_name, {})
+                prev_call_num = prev_used_call.get(method_name, 0) + 1
+                prev_used_call[method_name] = prev_call_num
+                used_call[module_name] = prev_used_call
+
+                before_call = (module_name, method_name)
+
             position += 1
 
         return changed
