@@ -206,28 +206,36 @@ class TestCaseChromosome(chrom.Chromosome):
                     ):
                         changed = True
 
-                before_position_statement = self._test_case.get_statement(position)
+                # before_position_statement = self._test_case.get_statement(position)
                 
                 statement.ret_val.distance = old_distance
                 position = ret_val.get_statement_position()
 
                 new_statement = self._test_case.get_statement(position)
 
-                assert before_position_statement == new_statement
+                # if before_position_statement:
+                #     try:
+                #         assert before_position_statement == new_statement
+                #     except AssertionError:
+                #         _LOGGER.info(f"{changed}")
+                #         _LOGGER.info(f"Before: {before_position_statement.__class__}")
+                #         _LOGGER.info(f"After: {new_statement}")
+                    # raise AssertionError
 
             new_statement = self._test_case.get_statement(position)
 
             if isinstance(new_statement, stmt.ParametrizedStatement):
                 # _LOGGER.info(new_statement)
-                module_name = new_statement._generic_callable._owner.full_name
-                method_name = new_statement._generic_callable._callable.__name__
-                # _LOGGER.info(f"Module: {module_name}, Method: {method_name}")
-                prev_used_call = used_call.get(module_name, {})
-                prev_call_num = prev_used_call.get(method_name, 0) + 1
-                prev_used_call[method_name] = prev_call_num
-                used_call[module_name] = prev_used_call
+                if new_statement._generic_callable.is_method():
+                    module_name = new_statement._generic_callable._owner.full_name
+                    method_name = new_statement._generic_callable._callable.__name__
+                    # _LOGGER.info(f"Module: {module_name}, Method: {method_name}")
+                    prev_used_call = used_call.get(module_name, {})
+                    prev_call_num = prev_used_call.get(method_name, 0) + 1
+                    prev_used_call[method_name] = prev_call_num
+                    used_call[module_name] = prev_used_call
 
-                before_call = (module_name, method_name)
+                    before_call = (module_name, method_name)
 
             position += 1
 

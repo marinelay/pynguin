@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE experiment SYSTEM "experiments.dtd">
+<experiment iterations="30">
+  <setup>
+    <constraint>thor</constraint>
+    <docker path="/scratch/lukasczy/pynguin.tar" name="pynguin" version="b178e2a9"/>
+    <configurations>
+      <global>
+        <option key="maximum-search-time" value="600"/>
+        <option key="poor" value=""/>
+        <option key="assertion-generation" value="NONE"/>
+        <option key="create-coverage-report" value="True"/>
+      </global>
+      <configuration id="DynaMOSA-TypeHints">
+        <option key="algorithm" value="DYNAMOSA"/>
+        <option key="type_inference_strategy" value="TYPE_HINTS"/>
+      </configuration>
+      <configuration id="DynaMOSA-NoTypeHints">
+        <option key="algorithm" value="DYNAMOSA"/>
+        <option key="type_inference_strategy" value="NONE"/>
+      </configuration>
+    </configurations>
+    <output-variables>
+      <output-variable>TargetModule</output-variable>
+      <output-variable>ConfigurationId</output-variable>
+      <output-variable>ProjectName</output-variable>
+      <output-variable>TotalTime</output-variable>
+      <output-variable>AlgorithmIterations</output-variable>
+      <output-variable>Coverage</output-variable>
+      <output-variable>RandomSeed</output-variable>
+      <output-variable>McCabeMin</output-variable>
+      <output-variable>McCabeMean</output-variable>
+      <output-variable>McCabeMedian</output-variable>
+      <output-variable>McCabeMax</output-variable>
+      <output-variable>CodeObjects</output-variable>
+      <output-variable>Predicates</output-variable>
+      <output-variable>Goals</output-variable>
+      <output-variable>GeneratableTypes</output-variable>
+      <output-variable>AccessibleObjectsUnderTest</output-variable>
+      <output-variable>NumberOfCreatedMutants</output-variable>
+      <output-variable>NumberOfKilledMutants</output-variable>
+      <output-variable>NumberOfTimedOutMutants</output-variable>
+      <output-variable>MutationScore</output-variable>
+      <output-variable>CoverageTimeline</output-variable>
+    </output-variables>
+  </setup>
+  <projects>
+    <project>
+      <name>codetiming</name>
+      <version>1.3.0</version>
+      <repository>https://github.com/realpython/codetiming</repository>
+      <description>Flexible, customizable timer</description>
+      <sources>projects/codetiming</sources>
+      <modules>
+        <module>codetiming._timer</module>
+        <module>codetiming._timers</module>
+      </modules>
+    </project>
+  </projects>
+</experiment>

@@ -806,6 +806,11 @@ class TestFactory:
 
         for call in calls:
             weight = 1
+
+            if not call.is_method():
+                weights.append(weight)
+                continue
+
             call_module = call._owner.full_name
             call_func = call._callable.__name__
 
@@ -833,6 +838,7 @@ class TestFactory:
 
             weights.append(weight)
 
+        # self._logger.info(f"weights: {weights}")
         call = randomness.choice(calls)
         # call = randomness.choices(calls, weights=weights)[0]
         try:
