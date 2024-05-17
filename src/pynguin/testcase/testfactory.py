@@ -839,8 +839,8 @@ class TestFactory:
             weights.append(weight)
 
         # self._logger.info(f"weights: {weights}")
-        call = randomness.choice(calls)
-        # call = randomness.choices(calls, weights=weights)[0]
+        # call = randomness.choice(calls)
+        call = randomness.choices(calls, weights=weights)[0]
         try:
             self.change_call(test_case, statement, call, signature_memo)
             return True
