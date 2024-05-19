@@ -116,3 +116,5 @@ docs/_build
 
 # projects
 projects*/*
+python_experiments/*
+
